@@ -1,0 +1,116 @@
+<html>
+<head>
+  <title>Simple client</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script type="text/javascript">
+    var ws; 
+    var state = 0;
+    
+    function init() {
+      // Connect to Web Socket
+      ws = new WebSocket("ws://localhost:8002/");
+      // Set event handlers.
+      ws.onopen = function() {
+        output("<b>SecureShell$</b> Connected to:"+"ws://localhost:8002/");
+      };
+      
+      ws.onmessage = function(e) {
+        // e.data contains received string.
+        if(e.data!="")
+        {   
+            {
+              if(e.data == "Enter Password : ")
+                  state = 1;
+
+              output( e.data);
+            }
+        }
+      };
+      
+      ws.onclose = function() {
+        output("<b>SecureShell$</b> Disconnected from "+"ws://localhost:8002/");
+      };
+      ws.onerror = function(e) {
+        output("<b>SecureShell$ </b> Error");
+        console.log(e)
+      };
+    }
+    
+    function onSubmit() {
+      var input = document.getElementById("input");
+      // You can send message to the Web Socket using ws.send.
+      if(state == 1)
+      {
+          var encrypted = CryptoJS.AES.encrypt(input.value, "Secret Passphrase").toString();
+          ws.send(encrypted);
+          // alert(encrypted);
+          output("<b>SecureShell$ </b>" + "********");
+          state = 0;
+      }
+      else
+      {
+          ws.send(input.value);
+          output("<b>SecureShell$ </b>" + input.value);
+      }
+      input.value = "";
+      input.focus();
+    }
+    
+    function onCloseClick() {
+      output("<b>SecureShell$</b> Disconnecting from "+"ws://localhost:8002/");
+      ws.close();
+      output("<b>SecureShell$</b> Disconnected from "+"ws://localhost:8002/");
+      
+    }
+    
+    function output(str) {
+      var log = document.getElementById("log");
+      var escaped = str.replace(/&/, "&amp;").replace(/"/, "&quot;"); // "
+      log.innerHTML = log.innerHTML + "<br>" + escaped ;
+    }
+  </script>
+</head>
+<body onload="init();">
+<div class="jumbotron">
+  <h1 class="display-2">Secure Shell Using WebSockets</h1>
+  <p style="text-align: center; font-size: x-large;">
+    Mock SSH using websockets with encryption <br></p>
+      </div>
+    <div class="container">
+  <p style="font-size: large;">
+    <h2>Main Modules Developed</h2>
+  
+    <h3>Server:</h3>
+    <strong>feed :</strong> To accept messages from the client and to perform TCP handshaking on first contact.<br>
+    <strong>sendMessage :</strong> To send a message to the client<br>
+   <strong>validate_username :</strong> To verify that the user is registered in the database<br>
+    <strong>validate_password :</strong> To decrypt the password and to check if it matches with the hashed password stored in the database<br>
+    <strong>execute_command :</strong> To execute the command sent by the client and prepare the output to be delivered.<br>
+
+    <h3>Client:</h3>
+
+    <strong>onSubmit :</strong> To send the command entered by the user to the server. Also ensures encryption of the password before sending.<br>
+    <strong>onMessage :</strong> To output the message sent by the server, that is the result of the command sent.<br>
+
+  </p>
+  <a href="README.md">Click Here to see more</a>
+  </div>
+  <hr>
+  <form onsubmit="onSubmit(); return false;">
+    <h3 style="text-align: center; color: black;" class="display-4">Type your command here</h3>
+    <input type="text" id="input">
+    <input type="submit" value="Send" class="btn btn-primary btn-lg">
+    <button onclick="onCloseClick()" class="btn btn-secondary btn-lg">Close</button>
+  </form>
+  <div class="container text-white bg-dark">
+  <h2 class="text-white bg-dark">Secure Shell</h2>
+  <div id="log"></div>
+  </div>
+</body>
+<footer>
+  <br><br><br>
+  <p style="text-align: center;"><i>By Mridu Kejariwal & Kashish Madan</i></p>
+</footer>
+</html>
